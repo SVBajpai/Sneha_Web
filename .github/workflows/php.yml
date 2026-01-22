@@ -1,22 +1,35 @@
-steps:
-- uses: actions/checkout@v4
+name: PHP Composer CI
 
-- name: Setup PHP
-  uses: shivammathur/setup-php@v2
-  with:
-    php-version: '8.1'
-    tools: composer
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-- name: Validate composer.json and composer.lock
-  run: composer validate --strict
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-- name: Cache Composer packages
-  uses: actions/cache@v3
-  with:
-    path: vendor
-    key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-    restore-keys: |
-      ${{ runner.os }}-php-
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-- name: Install dependencies
-  run: composer install --prefer-dist --no-progress
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
