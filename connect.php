@@ -1,31 +1,47 @@
 <?php
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "sneha_db";
+// Display errors for debugging (remove in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+// Database credentials
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "rd_websoft_db";
 
-// Check Connection
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
-    die("DB Connection Failed: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 
-// Get Form Values
-$fullname = $_POST['fullname'];
-$email = $_POST['email'];
-$subject = $_POST['subject'];
-$message = $_POST['message'];
+// Get POST data safely
+$fullname = isset($_POST['fullname']) ? trim($_POST['fullname']) : '';
+$email = isset($_POST['email']) ? trim($_POST['email']) : '';
+$subject = isset($_POST['subject']) ? trim($_POST['subject']) : '';
+$message = isset($_POST['message']) ? trim($_POST['message']) : '';
 
-// Insert Query (table name = contact)
-$sql = "INSERT INTO contact (fullname, email, subject, message)
-        VALUES ('$fullname', '$email', '$subject', '$message')";
+// Validate
+if (!$fullname || !$email || !$subject || !$message) {
+    echo "<h3 style='color:red;text-align:center;margin-top:50px;'>Error: All fields are required.</h3>";
+    echo "<p style='text-align:center;'><a href='contact.html'>Go Back to Contact Form</a></p>";
+    exit();
+}
 
-if ($conn->query($sql) === TRUE) {
-    echo "<script>alert('Your message was sent successfully!'); window.location.href='contact.html';</script>";
+// Prepare statement
+$stmt = $conn->prepare("INSERT INTO contacts (fullname, email, subject, message) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("ssss", $fullname, $email, $subject, $message);
+
+// Execute
+if ($stmt->execute()) {
+    header("Location: submit.php");
+    exit();
 } else {
-    echo "Database Error: " . $conn->error;
+    echo "<h3 style='color:red;text-align:center;margin-top:50px;'>Database Error: " . $stmt->error . "</h3>";
+    echo "<p style='text-align:center;'><a href='contact.html'>Go Back to Contact Form</a></p>";
 }
 
+// Close
+$stmt->close();
 $conn->close();
 ?>
